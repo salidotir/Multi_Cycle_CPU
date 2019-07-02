@@ -26,7 +26,7 @@ module cpu(clk);
 	wire IorD;									// inst or data
 	wire mem_write;							// memory enable	
 	wire IRWrite;								// instruction register enable
-	wire RegDst, Mem2Reg;
+	wire [1:0] RegDst, Mem2Reg;
 	wire [1:0] pc_src;
 	wire [3:0] alu_control;
 	wire RegWrite, alu_src_a, branch, pc_write;
@@ -139,17 +139,22 @@ module cpu(clk);
 	 );
 		 		 
 	// wr multiplexer
-	mux2x1 #(.x(5)) wr_mux2x1_5(
+	mux4x1 #(.x(5)) wr_mux4x1_5(
 		 .a(wr1), 
 		 .b(wr2), 
+		 .c(5'd31), 					// Register 31, return address in jal
+		 .d(0),                    //is not used
 		 .sel(RegDst), 
 		 .out(wr)
 		 );
-		 
+
+	 
 	// wd multiplexer
-	mux2x1 wd_mux2x1_32 (
+	mux4x1 wd_mux4x1_32 (
 		 .a(alu_out), 
 		 .b(data), 
+		 .c(pc),                   //for jal
+		 .d(0),                    //is not used
 		 .sel(Mem2Reg), 
 		 .out(wd)
 		 );

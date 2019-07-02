@@ -6,7 +6,8 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 	input [5:0] Opcode, Funct;
 	output reg [3:0] ALUControl;
 	output reg [1:0] ALUSrcB, PCSrc;
-	output reg IorD, MemWrite, IRWrite, PCWrite, Branch, ALUSrcA, RegWrite, Mem2Reg, RegDst;
+	output reg IorD, MemWrite, IRWrite, PCWrite, Branch, ALUSrcA, RegWrite;
+	output reg [1:0]	Mem2Reg, RegDst;
 	
 	// states
 	reg [4:0] state = 0;
@@ -85,6 +86,9 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 					
 					6'h2:							// jump
 						next_state = s10;
+					
+					6'h3:                  //jal
+						next_state = s11;
 				endcase
 			end
 			
@@ -196,7 +200,7 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				
 				next_state = s6;
 				
-				if(Funct == 6'b001101)
+				if(Funct == 6'b001101) //jr
 				begin
 					next_state = s12;
 				end
@@ -250,7 +254,13 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			11:
 			begin
+				PCSrc = 2'b10;
+				PCWrite = 1;
+				RegDst = 2;
+				Mem2Reg = 2;
+				RegWrite = 1;
 				
+				next_state = s0;
 			end
 			
 			12:

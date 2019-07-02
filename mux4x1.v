@@ -1,12 +1,12 @@
 `timescale 1ns / 1ps
 
-module mux4x1 (a, b, c, d, sel, out);
-	input [31:0] a;
-	input [31:0] b;
-	input [31:0] c;
-	input [31:0] d;
+module mux4x1  #(parameter x = 32)(a, b, c, d, sel, out);
+	input [x-1:0] a;
+	input [x-1:0] b;
+	input [x-1:0] c;
+	input [x-1:0] d;
 	input [1:0] sel;
-	output reg [31:0] out;
+	output reg [x-1:0] out;
 
 	always @(a, b, c, d, sel)
 	begin

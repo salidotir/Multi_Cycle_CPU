@@ -23,13 +23,20 @@ module inst_data_memory(pc_address, write_data, clk, mem_write, read_inst);
 	end
 	initial begin
 		inst_data_memory[0] <= 32'h00011800; // add
+		inst_data_memory[1] <= 32'h0c000005; // jal t0 20
+		inst_data_memory[2] <= 32'h00011800; // add
+		inst_data_memory[3] <= 32'h000118ff;
+		inst_data_memory[20] <= 32'h00011800; // add
+		inst_data_memory[21] <= 32'h03e0000d; // jr $ra which its value is 2 because of jal
+		
 		//inst_data_memory[0] <= 32'h00000000;
 		//inst_data_memory[1] <= 32'hffffffff;
-		inst_data_memory[1] <= 32'h08000002; //jump to 8
+		/*inst_data_memory[1] <= 32'h08000002; //jump to 8
 		inst_data_memory[2] <= 32'h00000000; //no attention
 		inst_data_memory[8] <= 32'h0040000d; //jr 
 		inst_data_memory[9] <= 32'h00000000; //no attention
 		inst_data_memory[20] <= 32'h00011800;//add
+		*/
 	end
 	
 //	initial begin
