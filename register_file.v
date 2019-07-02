@@ -27,6 +27,7 @@ module register_file(ra, rb, wr, wd, we, clk, rda, rdb);
 		reg_file[0] <= 32'hf0f0f0f0;
 		reg_file[1] <= 32'hf0f0f0f0;
 		reg_file[2] <= 32'h00000014;
+		reg_file[3] <= 32'h00000003;
 	end
 
 endmodule

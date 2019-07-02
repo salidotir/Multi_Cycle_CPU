@@ -37,11 +37,11 @@ module main_ALU(srca, srcb, clk, ALUControl, ALUout, zero);
 			else
 				ALUout <= 32'b0;
 		else if (ALUControl == 4'b1010)			// shift left logical
-			ALUout <= srca << srcb;
+			ALUout <= srcb << srca;
 		else if (ALUControl == 4'b1011)			// shift right logical
-			ALUout <= srca >> srcb;
+			ALUout <= srcb >> srca;
 		else if (ALUControl == 4'b1100)			// shift right arithmetic
-			ALUout <= srca >>> srcb;
+			ALUout <= srcb >>> srca;
 		end
 
 endmodule

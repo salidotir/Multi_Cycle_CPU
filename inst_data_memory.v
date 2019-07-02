@@ -22,12 +22,28 @@ module inst_data_memory(pc_address, write_data, clk, mem_write, read_inst);
 		  read_inst <= inst_data_memory[pc_address];
 	end
 	initial begin
+		inst_data_memory[0] <= 32'hac620000; //sw $2 ,0($3)
+		inst_data_memory[1] <= 32'h8c640000; //lw $4 ,0($3)
+		
+		
+		/*
+		inst_data_memory[0] <= 32'h0022188a; //sll
+		inst_data_memory[1] <= 32'h00011800; // add
+		*/
+		
+		
+		/*
 		inst_data_memory[0] <= 32'h00011800; // add
 		inst_data_memory[1] <= 32'h0c000005; // jal t0 20
-		inst_data_memory[2] <= 32'h00011800; // add
-		inst_data_memory[3] <= 32'h000118ff;
+		inst_data_memory[2] <= 32'h00220800; // add
+		//inst_data_memory[3] <= 32'h00221800; // add
+		
+		//inst_data_memory[3] <= 32'h000118ff;
 		inst_data_memory[20] <= 32'h00011800; // add
 		inst_data_memory[21] <= 32'h03e0000d; // jr $ra which its value is 2 because of jal
+		
+		*/
+		
 		
 		//inst_data_memory[0] <= 32'h00000000;
 		//inst_data_memory[1] <= 32'hffffffff;

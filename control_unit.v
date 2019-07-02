@@ -5,8 +5,8 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 	input clk;
 	input [5:0] Opcode, Funct;
 	output reg [3:0] ALUControl;
-	output reg [1:0] ALUSrcB, PCSrc;
-	output reg IorD, MemWrite, IRWrite, PCWrite, Branch, ALUSrcA, RegWrite;
+	output reg [1:0] ALUSrcB, PCSrc ,  ALUSrcA;
+	output reg IorD, MemWrite, IRWrite, PCWrite, Branch, RegWrite;
 	output reg [1:0]	Mem2Reg, RegDst;
 	
 	// states
@@ -25,6 +25,7 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 	parameter s10 = 10;				// jump
 	parameter s11 = 11;				// jump register 
 	parameter s12 = 12;				// jump & link
+	parameter s13 = 13;				// lw & sw
 	
 	reg flags = 1;
 	always @(posedge clk)
@@ -70,10 +71,10 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				
 				case(Opcode)
 					6'h23:						// lw
-						next_state = s2;
+						next_state = s13;
 					
 					6'h2b:						// sw
-						next_state = s4;
+						next_state = s13;
 						
 					6'h0:							// R-type functions
 						next_state = s5;
@@ -94,9 +95,6 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			2:
 			begin
-				ALUSrcA = 1;
-				ALUSrcB = 2'b10;
-				ALUControl = 0;				// add in the alu
 				IorD = 1;
 				
 				next_state = s3;
@@ -113,9 +111,6 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			4:
 			begin
-				ALUSrcA = 1;
-				ALUSrcB = 2'b10;
-				ALUControl = 0;				// add in the alu
 				IorD = 1;
 				MemWrite = 1;
 				
@@ -183,17 +178,20 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 
 						10:
 						begin
-							ALUControl = 10;
+							ALUControl = 10;      //shift left logical
+							ALUSrcA = 2;
 						end
 						
 						11:
 						begin
-							ALUControl = 11;
+							ALUControl = 11;      //shift right logical
+							ALUSrcA = 2;
 						end
 						
 						12:
 						begin
-							ALUControl = 12;
+							ALUControl = 12;     //shift right arithmetic
+							ALUSrcA = 2;
 						end
 					endcase
 				end
@@ -271,6 +269,17 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				next_state = s0;
 			end
 			
+			13:
+			begin
+				ALUSrcA = 1;
+				ALUSrcB = 2'b10;
+				ALUControl = 0;				// add in the alu
+				
+				if(Opcode == 6'h23)
+					next_state = s2;
+				else if(Opcode == 6'h2b)
+					next_state = s4;
+			end
 		endcase
 	end
 

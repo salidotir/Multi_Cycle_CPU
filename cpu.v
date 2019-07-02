@@ -29,13 +29,13 @@ module cpu(clk);
 	wire [1:0] RegDst, Mem2Reg;
 	wire [1:0] pc_src;
 	wire [3:0] alu_control;
-	wire RegWrite, alu_src_a, branch, pc_write;
-	wire [1:0]  alu_src_b;
+	wire RegWrite, branch, pc_write;
+	wire [1:0]  alu_src_b ,alu_src_a;
 	wire [31:0] next_pc, alu_out;
 	wire [31:0] address;						// output wire of pc_mux
 	wire [31:0] read_inst;					// output of memory
 	wire [31:0] data;							// data register output
-	wire [4:0] ra, rb, wr1, wr2;
+	wire [4:0] ra, rb, wr1, wr2 , shift_amt;
 	wire [15:0] sign;
 	wire [25:0] addr;							// address output of inst register (jump)
 	wire [5:0] opcode, funct;
@@ -50,6 +50,7 @@ module cpu(clk);
 	wire [31:0] alu_result;
    wire [31:0] pc_jump_1;
 	wire [31:0] pc_jump_concat;
+	wire [31:0] shift_amt_concat;
 	wire zero;
 	
 	
@@ -132,6 +133,7 @@ module cpu(clk);
 		 .rb(rb), 
 		 .wr1(wr1), 
 		 .wr2(wr2), 
+		 .shift_amt(shift_amt),
 		 .sign_extend(sign), 
 		 .address(addr),
 		 .opcode(opcode), 
@@ -193,10 +195,17 @@ module cpu(clk);
     .out(shift_sign_imm)
     );
 
+	
+	 // concat shift_amt with 0.
+	 assign shift_amt_concat[4:0] = shift_amt[4:0];
+	 assign shift_amt_concat[31:5] = 0; 
+	  
 	// SrcA multiplexer
-	mux2x1 src_a_mux2x1_32 (
+	mux4x1 src_a_mux4x1_32 (
 		 .a(pc), 
 		 .b(a), 
+		 .c(shift_amt_concat),     //for shift inst.
+		 .d(0),                    //is not used
 		 .sel(alu_src_a), 
 		 .out(src_a)
 		 );
