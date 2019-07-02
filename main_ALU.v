@@ -7,7 +7,7 @@ module main_ALU(srca, srcb, clk, ALUControl, ALUout, zero);
 	output reg [31:0] ALUout;
 	output reg zero;
 
-	always @(posedge clk)
+	always @(ALUControl , srca , srcb)
 	begin
 		if ( srca == srcb)						// set zero flag
 			zero <= 1'b1;

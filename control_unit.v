@@ -9,8 +9,8 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 	output reg IorD, MemWrite, IRWrite, PCWrite, Branch, ALUSrcA, RegWrite, Mem2Reg, RegDst;
 	
 	// states
-	reg [3:0] state = 0;
-	reg [3:0] next_state;
+	reg [4:0] state = 0;
+	reg [4:0] next_state = 0;
 	parameter s0 = 0;					// fetch
 	parameter s1 = 1;					// decode
 	parameter s2 = 2;					// mem_read and mem_address
@@ -22,13 +22,24 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 	parameter s8 = 8;					// addi execute
 	parameter s9 = 9;					// addi write_back
 	parameter s10 = 10;				// jump
-
-	/*always @(posedge clk)
-	begin
-		state = next_state;
-	end
-	*/
+	parameter s11 = 11;				// jump register 
+	parameter s12 = 12;				// jump & link
+	
+	reg flags = 1;
 	always @(posedge clk)
+	begin
+		if(flags == 1)
+			begin
+				state = 0;
+				flags = 0;
+			end
+		else if(flags == 0)
+			begin
+				state = next_state;
+			end
+		end
+	
+	always @(state, Opcode , Funct)
 	begin
 		case(state)
 			0:
@@ -39,14 +50,12 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				ALUControl = 0;				// add in the alu
 				PCSrc = 2'b00;
 				IRWrite = 1;
-				PCWrite = 1;
-			/*	
+				PCWrite = 1;	
 				MemWrite = 0;
-				RegDst = 0;
 				Mem2Reg = 0;
 				RegWrite = 0;
 				Branch = 0;
-				*/
+				
 				next_state = s1;
 			end
 
@@ -55,6 +64,8 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				ALUSrcA = 0;
 				ALUSrcB = 2'b11;
 				ALUControl = 0;				// add in the alu
+				IRWrite = 0;
+				PCWrite = 0;
 				
 				case(Opcode)
 					6'h23:						// lw
@@ -184,6 +195,11 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				end
 				
 				next_state = s6;
+				
+				if(Funct == 6'b001101)
+				begin
+					next_state = s12;
+				end
 			end
 			
 			6:
@@ -232,12 +248,20 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				next_state = s0;
 			end
 			
-			default:
-				state = s0;
+			11:
+			begin
+				
+			end
+			
+			12:
+			begin
+				PCSrc = 2'b11;
+				PCWrite = 1;
+				
+				next_state = s0;
+			end
+			
 		endcase
-
-	state = next_state;
-
 	end
 
 endmodule

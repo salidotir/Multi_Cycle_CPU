@@ -22,6 +22,7 @@ module cpu(clk);
 
 	input clk;
 	
+	reg [31:0] pc ;
 	wire IorD;									// inst or data
 	wire mem_write;							// memory enable	
 	wire IRWrite;								// instruction register enable
@@ -30,7 +31,7 @@ module cpu(clk);
 	wire [3:0] alu_control;
 	wire RegWrite, alu_src_a, branch, pc_write;
 	wire [1:0]  alu_src_b;
-	wire [31:0] pc, next_pc, alu_out;
+	wire [31:0] next_pc, alu_out;
 	wire [31:0] address;						// output wire of pc_mux
 	wire [31:0] read_inst;					// output of memory
 	wire [31:0] data;							// data register output
@@ -52,12 +53,6 @@ module cpu(clk);
 	wire zero;
 	
 	
-	/*
-	initial begin
-		 assign next_pc = 0;	
-	end
-	*/
-	
 	assign pc_en = (zero & branch) | pc_write;
 	
 	// control unit
@@ -78,15 +73,32 @@ module cpu(clk);
 		 .Mem2Reg(Mem2Reg), 
 		 .RegDst(RegDst)
 		 );
-	
 	// pc register
-	pc_register pc_reg (
+	/*pc_register pc_reg (
 		 .clk(clk), 
-		 .pc(next_pc), 
+		 .pc(temp_pc), 
 		 .pc_en(pc_en),
 		 .next_pc(pc)
 		 );
-			 
+	*/
+	reg flagpc = 1;
+	always@ (posedge clk) 
+	begin
+		if(flagpc == 1)
+		begin
+			pc <= 0;
+			flagpc <= 0;
+		end
+		else if(flagpc == 0)
+		begin
+			if(pc_en == 1'b1)
+				begin
+					pc <= next_pc;
+				end
+		end	
+	end			
+
+
 	// pc multiplexer
 	mux2x1 pc_mux2x1_32 (
 		 .a(pc), 
@@ -187,7 +199,7 @@ module cpu(clk);
 	// SrcB multiplexer
 	mux4x1 src_b_mux4x1_32 (
 		 .a(b), 
-		 .b(4), 
+		 .b(32'd1), 
 		 .c(sign_imm), 
 		 .d(shift_sign_imm),
 		 .sel(alu_src_b), 
@@ -226,7 +238,7 @@ module cpu(clk);
 		 .a(alu_result), 
 		 .b(alu_out), 
 		 .c(pc_jump_concat), 
-		 .d(0),									// the fourth input is not used.
+		 .d(rda),									// the fourth input is not used.
 		 .sel(pc_src), 
 		 .out(next_pc)								// next pc is in pc.
 		 );

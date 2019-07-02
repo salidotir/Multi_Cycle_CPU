@@ -15,7 +15,7 @@ module cpu_test;
 		clk = 0;
 
 		// Wait 100 ns for global reset to finish
-		#100;
+		
         
 		// Add stimulus here
 
