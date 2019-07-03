@@ -25,7 +25,10 @@ module inst_data_memory(pc_address, write_data, clk, mem_write, read_inst);
 		inst_data_memory[0] <= 32'hac620000; //sw $2 ,0($3)
 		inst_data_memory[1] <= 32'h8c640000; //lw $4 ,0($3)
 		
-		
+		inst_data_memory[27] <=  32'h00011800; // add
+		inst_data_memory[28] <=  32'h00011800; // add
+		inst_data_memory[29] <=  32'h03e0000d; // jr $ra
+ 		
 		/*
 		inst_data_memory[0] <= 32'h0022188a; //sll
 		inst_data_memory[1] <= 32'h00011800; // add

@@ -18,9 +18,10 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-module cpu(clk);
+module cpu(clk , INT , NMI , INT_Disable , INA);
 
-	input clk;
+	input clk , INT , NMI , INT_Disable;
+	output  reg INA;
 	
 	reg [31:0] pc ;
 	wire IorD;									// inst or data
@@ -52,13 +53,111 @@ module cpu(clk);
 	wire [31:0] pc_jump_concat;
 	wire [31:0] shift_amt_concat;
 	wire zero;
-	
+	wire [31:0] new_pc;
+	wire [1:0] int_src; 
 	
 	assign pc_en = (zero & branch) | pc_write;
+	
+	
+	
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ CPU
+	
+
+	reg INT_control, NMI_control;
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INTERRUPT	
+	
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ NON_MASKABLE
+	
+	always@(posedge NMI,negedge NMI)
+	begin
+		if(NMI == 1)
+			NMI_control = 1;
+		else if (NMI == 0)
+			NMI_control = 0;
+	end
+	
+	
+	
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MASKABLE
+	
+	always@(INT)
+	begin
+		if(INT == 1)
+			begin
+				if(INT_Disable == 0 && NMI == 0)
+					INT_control = 1;
+				else if(INT_Disable == 0 && NMI == 1)
+					begin
+						INT_control = 0;
+						INA = 1;
+					end
+				else if(INT_Disable == 1)
+					INT_control = 0;
+			end
+			
+		else if (INT == 0)
+			begin
+				INT_control = 0;
+			end
+	end
+	
+	
+	
+	
+	/*
+	
+	
+	wire INT_control, NMI_control;
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INTERRUPT	
+	
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ NON_MASKABLE
+	
+	always@(NMI)
+	begin
+		if(NMI == 1)
+			assign NMI_control = 1;
+		else if (NMI == 0)
+			assign NMI_control = 0;
+	end
+	
+	
+	
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MASKABLE
+	
+	always@(INT)
+	begin
+		if(INT == 1)
+			begin
+				if(INT_Disable == 0 && NMI_control == 0)
+					assign INT_control = 1;
+				else if(INT_Disable == 0 && NMI_control == 1)
+					begin
+						assign INT_control = 0;
+						assign INA = 1;
+					end
+				else if(INT_Disable == 1)
+					assign INT_control = 0;
+			end
+			
+		else if (INT == 0)
+			begin
+				assign INT_control = 0;
+			end
+	end
+	
+	
+	
+	*/
+	
+	
+	
+	
 	
 	// control unit
 	control_unit cu (
 		 .clk(clk), 
+		 .INT_control(INT_control), 
+		 .NMI_control(NMI_control), 
 		 .Opcode(opcode), 
 		 .Funct(funct), 
 		 .IorD(IorD), 
@@ -72,7 +171,8 @@ module cpu(clk);
 		 .ALUSrcA(alu_src_a), 
 		 .RegWrite(RegWrite), 
 		 .Mem2Reg(Mem2Reg), 
-		 .RegDst(RegDst)
+		 .RegDst(RegDst),
+		 .INTSrc(int_src)
 		 );
 	// pc register
 	/*pc_register pc_reg (
@@ -251,9 +351,19 @@ module cpu(clk);
 	mux4x1 pc_jump_mux4x1_32 (
 		 .a(alu_result), 
 		 .b(alu_out), 
-		 .c(pc_jump_concat), 
-		 .d(rda),									// the fourth input is not used.
+		 .c(pc_jump_concat),               //for jump and jal
+		 .d(rda),								  //for jr
 		 .sel(pc_src), 
+		 .out(new_pc)								
+		 );
+	
+	// interrupt multiplexer
+	mux4x1 interrupt_mux4x1_32 (
+		 .a(new_pc), 
+		 .b(32'd27),                        //NMI jump address  
+		 .c(32'd28),                        //INT jump address
+		 .d(0),									   // the fourth input is not used.
+		 .sel(int_src), 
 		 .out(next_pc)								// next pc is in pc.
 		 );
 	

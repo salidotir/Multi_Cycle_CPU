@@ -1,11 +1,11 @@
 `timescale 1ns / 1ps
 
-module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch, PCSrc,
-						  ALUControl, ALUSrcB, ALUSrcA, RegWrite, Mem2Reg, RegDst);
-	input clk;
+module control_unit(clk, INT_control , NMI_control ,Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch, PCSrc,
+						  ALUControl, ALUSrcB, ALUSrcA, RegWrite, Mem2Reg, RegDst , INTSrc);
+	input clk ,  INT_control , NMI_control;
 	input [5:0] Opcode, Funct;
 	output reg [3:0] ALUControl;
-	output reg [1:0] ALUSrcB, PCSrc ,  ALUSrcA;
+	output reg [1:0] ALUSrcB, PCSrc ,  ALUSrcA , INTSrc;
 	output reg IorD, MemWrite, IRWrite, PCWrite, Branch, RegWrite;
 	output reg [1:0]	Mem2Reg, RegDst;
 	
@@ -26,10 +26,15 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 	parameter s11 = 11;				// jump register 
 	parameter s12 = 12;				// jump & link
 	parameter s13 = 13;				// lw & sw
+	parameter s14 = 14;           //INT
+	parameter s15 = 15;
 	
+	reg tmp_NMI_control ,tmp_INT_control;
+
 	reg flags = 1;
 	always @(posedge clk)
 	begin
+	
 		if(flags == 1)
 			begin
 				state = 0;
@@ -41,28 +46,61 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			end
 		end
 	
+
+	
+	
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ CONTROL UNIT
 	always @(state, Opcode , Funct)
 	begin
 		case(state)
 			0:
 			begin
-				IorD = 0;
-				ALUSrcA = 0;
-				ALUSrcB = 2'b01;
-				ALUControl = 0;				// add in the alu
-				PCSrc = 2'b00;
-				IRWrite = 1;
-				PCWrite = 1;	
-				MemWrite = 0;
-				Mem2Reg = 0;
-				RegWrite = 0;
-				Branch = 0;
+				//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INTERRUPT
+				if(NMI_control == 1 )begin
+					tmp_NMI_control = 1;
+					end
+			   else if (INT_control == 1)begin
+					tmp_INT_control = 1;
+					end
+						
+				if((tmp_INT_control === 1) || (INT_control == 1))
+				begin
+					next_state = s14;
+				end
 				
-				next_state = s1;
+				else if(tmp_NMI_control == 1 || NMI_control == 1)
+				begin
+					
+					next_state = s15;
+				end				
+				
+				else
+				begin
+					IorD = 0;
+					ALUSrcA = 0;
+					ALUSrcB = 2'b01;
+					ALUControl = 0;				// add in the alu
+					PCSrc = 2'b00;
+					INTSrc = 2'b00;
+					IRWrite = 1;
+					PCWrite = 1;	
+					MemWrite = 0;
+					Mem2Reg = 0;
+					RegWrite = 0;
+					Branch = 0;
+					
+					next_state = s1;
+				
+				end
 			end
 
 			1:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				ALUSrcA = 0;
 				ALUSrcB = 2'b11;
 				ALUControl = 0;				// add in the alu
@@ -95,6 +133,11 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			2:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				IorD = 1;
 				
 				next_state = s3;
@@ -102,6 +145,11 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				
 			3:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+			
 				RegDst = 0;
 				Mem2Reg = 1;
 				RegWrite = 1;
@@ -111,6 +159,11 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			4:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				IorD = 1;
 				MemWrite = 1;
 				
@@ -119,6 +172,11 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			5:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				ALUSrcA = 1;
 				ALUSrcB = 2'b00;
 				
@@ -206,6 +264,11 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			6:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				RegDst = 1;
 				Mem2Reg = 0;
 				RegWrite = 1;
@@ -215,10 +278,16 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			7:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				ALUSrcA = 1;
 				ALUSrcB = 2'b00;
 				ALUControl = 1;				// sub in the alu for beq
 				PCSrc = 2'b01;
+				INTSrc = 2'b00;
 				Branch = 1;
 				
 				next_state = s0;
@@ -226,6 +295,11 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			8:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				ALUSrcA = 1;
 				ALUSrcB = 2'b10;
 				ALUControl = 0;				// add in the alu
@@ -235,6 +309,11 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 			
 			9:
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				RegDst = 0;
 				Mem2Reg = 0;
 				RegWrite = 1;
@@ -242,18 +321,30 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				next_state = s0;
 			end
 			
-			10:
+			10:             //j
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				PCSrc = 2'b10;
 				PCWrite = 1;
+				INTSrc = 2'b00;
 				
 				next_state = s0;
 			end
 			
-			11:
+			11:             //jal
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;				
+
 				PCSrc = 2'b10;
 				PCWrite = 1;
+				INTSrc = 2'b00;
 				RegDst = 2;
 				Mem2Reg = 2;
 				RegWrite = 1;
@@ -261,16 +352,27 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 				next_state = s0;
 			end
 			
-			12:
+			12:              //jr
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				PCSrc = 2'b11;
 				PCWrite = 1;
+				INTSrc = 2'b00;
 				
 				next_state = s0;
 			end
 			
-			13:
+			13:                 //lw and sw in common
 			begin
+				if(NMI_control == 1 )
+					tmp_NMI_control = 1;
+				else if (INT_control == 1)
+					tmp_INT_control = 1;
+					
 				ALUSrcA = 1;
 				ALUSrcB = 2'b10;
 				ALUControl = 0;				// add in the alu
@@ -279,6 +381,34 @@ module control_unit(clk, Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch
 					next_state = s2;
 				else if(Opcode == 6'h2b)
 					next_state = s4;
+			end
+			
+			14:
+			begin
+				tmp_INT_control = 0;
+				INTSrc = 2'b10;
+				IorD = 0;
+				RegWrite = 1;
+				RegDst = 2'b10;
+				Mem2Reg = 2'b10;
+				PCWrite = 1;
+				
+				next_state = s0;
+			end
+			
+			15:
+			begin
+			
+				tmp_NMI_control = 0;
+				INTSrc = 2'b01;
+				IorD = 0;
+				RegWrite = 1;
+				RegDst = 2'b10;
+				Mem2Reg = 2'b10;
+				PCWrite = 1;
+				
+				next_state = s0;
+
 			end
 		endcase
 	end
