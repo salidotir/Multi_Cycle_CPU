@@ -75,7 +75,9 @@ module control_unit(clk,NMI ,INT_control , NMI_control ,Opcode, Funct, IorD, Mem
 				else if(temp)
 				begin
 					if(NMI == 0)
+					begin
 						next_state = s15;
+					end
 					if(NMI == 1)
 					begin
 						IorD = 0;
@@ -421,7 +423,7 @@ module control_unit(clk,NMI ,INT_control , NMI_control ,Opcode, Funct, IorD, Mem
 			
 			15:
 			begin
-			
+				temp = 0;
 				tmp_NMI_control = 0;
 				INTSrc = 2'b01;
 				IorD = 0;
