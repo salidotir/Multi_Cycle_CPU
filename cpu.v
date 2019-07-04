@@ -156,6 +156,7 @@ module cpu(clk , INT , NMI , INT_Disable , INA);
 	// control unit
 	control_unit cu (
 		 .clk(clk), 
+		 .NMI(NMI),
 		 .INT_control(INT_control), 
 		 .NMI_control(NMI_control), 
 		 .Opcode(opcode), 

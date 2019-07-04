@@ -1,8 +1,8 @@
 `timescale 1ns / 1ps
 
-module control_unit(clk, INT_control , NMI_control ,Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch, PCSrc,
+module control_unit(clk,NMI ,INT_control , NMI_control ,Opcode, Funct, IorD, MemWrite, IRWrite, PCWrite, Branch, PCSrc,
 						  ALUControl, ALUSrcB, ALUSrcA, RegWrite, Mem2Reg, RegDst , INTSrc);
-	input clk ,  INT_control , NMI_control;
+	input clk ,  INT_control , NMI_control ,NMI;
 	input [5:0] Opcode, Funct;
 	output reg [3:0] ALUControl;
 	output reg [1:0] ALUSrcB, PCSrc ,  ALUSrcA , INTSrc;
@@ -29,7 +29,8 @@ module control_unit(clk, INT_control , NMI_control ,Opcode, Funct, IorD, MemWrit
 	parameter s14 = 14;           //INT
 	parameter s15 = 15;
 	
-	reg tmp_NMI_control ,tmp_INT_control;
+	reg tmp_NMI_control = 0 ,tmp_INT_control = 0;
+	reg temp = 0;
 
 	reg flags = 1;
 	always @(posedge clk)
@@ -48,10 +49,12 @@ module control_unit(clk, INT_control , NMI_control ,Opcode, Funct, IorD, MemWrit
 	
 
 	
-	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ CONTROL UNIT
-	always @(state, Opcode , Funct)
+	always @(state, Opcode , Funct , NMI)
 	begin
+		
+		temp = tmp_NMI_control | NMI;
+		
 		case(state)
 			0:
 			begin
@@ -68,10 +71,30 @@ module control_unit(clk, INT_control , NMI_control ,Opcode, Funct, IorD, MemWrit
 					next_state = s14;
 				end
 				
-				else if(tmp_NMI_control == 1 || NMI_control == 1)
+				//else if(tmp_NMI_control == 1 || NMI_control == 1)
+				else if(temp)
 				begin
+					if(NMI == 0)
+						next_state = s15;
+					if(NMI == 1)
+					begin
+						IorD = 0;
+						ALUSrcA = 0;
+						ALUSrcB = 2'b01;
+						ALUControl = 0;				// add in the alu
+						PCSrc = 2'b00;
+						INTSrc = 2'b00;
+						IRWrite = 1;
+						PCWrite = 1;	
+						MemWrite = 0;
+						Mem2Reg = 0;
+						RegWrite = 0;
+						Branch = 0;
+						
+						next_state = s1;
+				
+					end
 					
-					next_state = s15;
 				end				
 				
 				else
